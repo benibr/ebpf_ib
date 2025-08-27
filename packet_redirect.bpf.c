@@ -46,13 +46,10 @@ int egress_redirect(struct __sk_buff *ctx) {
     //eth->h_dest[4] = 0x00;
     //eth->h_dest[5] = 0x00;
 
-    __u32 src_ip = ipv4->saddr;
-    __u32 dst_ip = ipv4->daddr;
-    
     struct {
         __u32 src_ip;
         __u32 dst_ip;
-    } flow_key = {src_ip, dst_ip};
+    } flow_key = {bpf_ntohs(ipv4->saddr), bpf_ntohs(ipv4->daddr)};
 
     __u32 hash = xxhash32(&flow_key, sizeof(flow_key), 0);
     __u32 key = hash % 2;
