@@ -41,8 +41,8 @@ up: packet_redirect.bpf.o
 	# Hardcode veth2@2 to a dummy MAC for sake of demonstration purposes.
 	$(EXEC) $(NET_2) ip link set dev veth2@2 addr 02:00:00:00:00:00
 	# Attaching eBPF program...
-	$(EXEC) $(NET_1) tc qdisc replace dev veth1@2 clsact
-	$(EXEC) $(NET_1) tc filter replace dev veth1@2 egress bpf direct-action object-file $< section tc
+	$(EXEC) $(NET_1) tc qdisc replace dev veth2@1 clsact
+	$(EXEC) $(NET_1) tc filter replace dev veth2@1 egress bpf direct-action object-file $< section tc
 	# LISTENING FOR UDP PACKET @ 10.0.2.11 7777...
 	# Use 'make listen' to listen for another packet...
 	@make listen
@@ -51,6 +51,7 @@ up: packet_redirect.bpf.o
 down:
 	$(NETNS) del $(NET_1)
 	$(NETNS) del $(NET_2)
+	$(IP) link del dev veth1@1
 
 .PHONY:
 listen:
