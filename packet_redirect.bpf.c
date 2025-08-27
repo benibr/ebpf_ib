@@ -22,6 +22,7 @@ int egress_redirect(struct __sk_buff *ctx) {
     struct iphdr *ipv4;
     int ret = TC_ACT_OK;
 
+    bpf_printk("---------------<BEGIN>---------------");
     bpf_printk("redirect: handling a packet\n");
 
     // bounds check for verifier, packet's data must be at least as large
@@ -33,28 +34,19 @@ int egress_redirect(struct __sk_buff *ctx) {
     ipv4 = data + sizeof(struct ethhdr);
 
     bpf_printk("redirect: checking ethernet header for IPv4 proto. result: %x\n", bpf_ntohs(eth->h_proto));
-    if (bpf_ntohs(eth->h_proto) != ETH_P_IP) return TC_ACT_OK;
+    if (bpf_ntohs(eth->h_proto) != ETH_P_IP) goto END;
 
     bpf_printk("redirect: checking destination address is 10.0.2.11\n");
-    if (bpf_ntohl(ipv4->daddr) != DEST_IP) return TC_ACT_OK;
+    if (bpf_ntohl(ipv4->daddr) != DEST_IP) goto END;
 
-    //bpf_printk("redirect: rewriting destination MAC\n");
-    //eth->h_dest[0] = 0x02;
-    //eth->h_dest[1] = 0x00;
-    //eth->h_dest[2] = 0x00;
-    //eth->h_dest[3] = 0x00;
-    //eth->h_dest[4] = 0x00;
-    //eth->h_dest[5] = 0x00;
-
+    
     struct {
         __u32 src_ip;
         __u32 dst_ip;
-    } flow_key = {bpf_ntohs(ipv4->saddr), bpf_ntohs(ipv4->daddr)};
+    } flow_params = {bpf_ntohs(ipv4->saddr), bpf_ntohs(ipv4->daddr)};
 
-    __u32 hash = xxhash32(&flow_key, sizeof(flow_key), 0);
-    __u32 key = hash % 2;
-    bpf_printk("redirect: hash: %d\n", hash);
-    bpf_printk("redirect: key: %d\n", key);
+    __u32 key = xxhash32(&flow_params, sizeof(flow_params), 0) % 2;
+    bpf_printk("redirect: flow based key: %d\n", key);
     if (key != 0) { 
         bpf_printk("redirect: performing redirect\n");
         ret = bpf_redirect(TARGET_INTF, 0);
