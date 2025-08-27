@@ -10,7 +10,8 @@
 // the interface we will redirect to.
 #define TARGET_INTF 4
 // the destination IP that determines if we will redirect the packet.
-#define DEST_IP 0x0a00020b  // 10.0.2.11
+#define DEST_IP_1 0x0a00020b  // 10.0.2.11
+#define DEST_IP_2 0x0a000228  // 10.0.2.40
 
 // look for an IPv4 packet with destination address 10.0.2.11 and redirect
 // it to a another interface.
@@ -36,8 +37,8 @@ int egress_redirect(struct __sk_buff *ctx) {
     bpf_printk("redirect: checking ethernet header for IPv4 proto. result: %x\n", bpf_ntohs(eth->h_proto));
     if (bpf_ntohs(eth->h_proto) != ETH_P_IP) goto END;
 
-    bpf_printk("redirect: checking destination address is 10.0.2.11\n");
-    if (bpf_ntohl(ipv4->daddr) != DEST_IP) goto END;
+    bpf_printk("redirect: checking destination address is 10.0.2.11 of 10.0.2.40\n");
+    if ((bpf_ntohl(ipv4->daddr) != DEST_IP_1) && (bpf_ntohl(ipv4->daddr) != DEST_IP_2)) goto END;
 
     // We select some stable parts of the IP header to keep hashing
     // constant for each flow

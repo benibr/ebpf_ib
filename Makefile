@@ -26,6 +26,8 @@ up: packet_redirect.bpf.o
 	$(EXEC) $(NET_1) ip addr add 10.0.2.20/24 dev veth22@1
 	$(EXEC) $(NET_2) ip addr add 10.0.2.11/24 dev veth2@2
 	$(EXEC) $(NET_2) ip addr add 10.0.2.11/24 dev veth22@2
+	$(EXEC) $(NET_2) ip addr add 10.0.2.40/24 dev veth2@2
+	$(EXEC) $(NET_2) ip addr add 10.0.2.40/24 dev veth22@2
 	$(IP) link set veth1@1 up
 	$(EXEC) $(NET_1) ip link set veth1@2 up
 	$(EXEC) $(NET_1) ip link set veth2@1 up
@@ -43,8 +45,14 @@ up: packet_redirect.bpf.o
 	# Attaching eBPF program...
 	$(EXEC) $(NET_1) tc qdisc replace dev veth2@1 clsact
 	$(EXEC) $(NET_1) tc filter replace dev veth2@1 egress bpf direct-action object-file $< section tc
-	# LISTENING FOR UDP PACKET @ 10.0.2.11 7777...
-	# Use 'make listen' to listen for another packet...
+	#
+	# use `nc -u 10.0.2.11 7777` to get routed over veth2@1
+	# and `nc -u 10.0.2.40 7777` to get routed over veth22@1
+	# and use `sudo ip netns exec router1 tcpdump -nni any  udp and port 7777`
+	#   to see packets inside the router take different paths
+	# and use `sudo cat /sys/kernel/debug/tracing/trace_pipe` to see debug output
+	#
+	# LISTENING FOR UDP PACKET @ 10.0.2.11 and 10.0.2.40 port 7777...
 	@make listen
 
 .PHONY:
@@ -55,7 +63,8 @@ down:
 
 .PHONY:
 listen:
-	$(EXEC) $(NET_2) nc -u -k -l 10.0.2.11 7777
+	$(EXEC) $(NET_2) nc -u -k -l 10.0.2.11 7777 &
+	$(EXEC) $(NET_2) nc -u -k -l 10.0.2.40 7777
 
 packet_redirect.bpf.o:
 
