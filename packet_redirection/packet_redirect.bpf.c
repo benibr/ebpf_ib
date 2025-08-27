@@ -14,14 +14,14 @@
 // look for an IPv4 packet with destination address 10.0.2.11 and redirect
 // it to a target interface.
 SEC("tc")
-int redirect(struct __sk_buff *ctx) {
+int egress_redirect(struct __sk_buff *ctx) {
     void *data_end = (void *)(__u64)(ctx->data_end);
     void *data = (void *)(__u64)(ctx->data);
     struct ethhdr *eth;
     struct iphdr *ipv4;
-	int ret;
+    int ret;
 
-	bpf_printk("redirect: handling packet\n");
+    bpf_printk("redirect: handling packet\n");
 
     // bounds check for verifier, packet's data must be at least as large
     // as an ethernet header and the non-variable portion of the IPv4 header.
@@ -31,25 +31,25 @@ int redirect(struct __sk_buff *ctx) {
     eth = data;
     ipv4 = data + sizeof(struct ethhdr);
 
-	bpf_printk("redirect: checking ethernet header for IPv4 proto: %x\n", bpf_ntohs(eth->h_proto));
+    bpf_printk("redirect: checking ethernet header for IPv4 proto: %x\n", bpf_ntohs(eth->h_proto));
     if (bpf_ntohs(eth->h_proto) != ETH_P_IP) return TC_ACT_OK;
 
-	bpf_printk("redirect: checking destination address is 10.0.2.11\n");
+    bpf_printk("redirect: checking destination address is 10.0.2.11\n");
     if (bpf_ntohl(ipv4->daddr) != DEST_IP) return TC_ACT_OK;
 
-	bpf_printk("redirect: rewriting destination MAC\n");
-	eth->h_dest[0] = 0x02;
-	eth->h_dest[1] = 0x00;
-	eth->h_dest[2] = 0x00;
-	eth->h_dest[3] = 0x00;
-	eth->h_dest[4] = 0x00;
-	eth->h_dest[5] = 0x00;
+    bpf_printk("redirect: rewriting destination MAC\n");
+    eth->h_dest[0] = 0x02;
+    eth->h_dest[1] = 0x00;
+    eth->h_dest[2] = 0x00;
+    eth->h_dest[3] = 0x00;
+    eth->h_dest[4] = 0x00;
+    eth->h_dest[5] = 0x00;
 
-	bpf_printk("redirect: performing redirect\n");
-	ret = bpf_redirect(TARGET_INTF, 0);
+    bpf_printk("redirect: performing redirect\n");
+    ret = bpf_redirect(TARGET_INTF, 0);
 
-	bpf_printk("redirect: result: %d\n", ret);
-	return ret;
+    bpf_printk("redirect: result: %d\n", ret);
+    return ret;
 }
 
 char _license[] SEC("license") = "GPL";
