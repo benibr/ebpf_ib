@@ -30,7 +30,8 @@ up: packet_redirect.bpf.o vmlinux.h
 	$(EXEC) $(NET_2) ip route add 10.0.1.0/24 dev veth2@2
 	# veth1@2 in netns_1 must proxy ARP requests for host_ns and netns_2 so
 	# host_ns can resolve MAC addresses for netns_2 and vice versa.
-	$(EXEC) $(NET_1) /bin/sh -c 'echo 1 > /proc/sys/net/ipv4/conf/veth1@2/proxy_arp'
+	$(EXEC) $(NET_1) /bin/sh -c 'echo 1 > /proc/sys/net/ipv4/conf/all/proxy_arp'
+	$(EXEC) $(NET_1) /bin/sh -c 'echo 1 > /proc/sys/net/ipv4/conf/all/forwarding'
 	# Hardcode veth2@2 to a dummy MAC for sake of demonstration purposes.
 	$(EXEC) $(NET_2) ip link set dev veth2@2 addr 02:00:00:00:00:00
 	# Attaching eBPF program...
