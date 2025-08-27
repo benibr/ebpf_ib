@@ -43,7 +43,7 @@ int egress_redirect(struct __sk_buff *ctx) {
     struct {
         __u32 src_ip;
         __u32 dst_ip;
-    } flow_params = {bpf_ntohs(ipv4->saddr), bpf_ntohs(ipv4->daddr)};
+    } flow_params = {bpf_ntohl(ipv4->saddr), bpf_ntohl(ipv4->daddr)};
 
     __u32 key = xxhash32(&flow_params, sizeof(flow_params), 0) % 2;
     bpf_printk("redirect: flow based key: %d\n", key);
