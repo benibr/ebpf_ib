@@ -13,7 +13,7 @@
 #define DEST_IP 0x0a00020b  // 10.0.2.11
 
 // look for an IPv4 packet with destination address 10.0.2.11 and redirect
-// it to a target interface.
+// it to a another interface.
 SEC("tc")
 int egress_redirect(struct __sk_buff *ctx) {
     void *data_end = (void *)(__u64)(ctx->data_end);
