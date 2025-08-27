@@ -39,12 +39,15 @@ int egress_redirect(struct __sk_buff *ctx) {
     bpf_printk("redirect: checking destination address is 10.0.2.11\n");
     if (bpf_ntohl(ipv4->daddr) != DEST_IP) goto END;
 
-    
+    // We select some stable parts of the IP header to keep hashing
+    // constant for each flow
     struct {
         __u32 src_ip;
         __u32 dst_ip;
+        // HINT: ports or protocols could be added here
     } flow_params = {bpf_ntohl(ipv4->saddr), bpf_ntohl(ipv4->daddr)};
 
+    // Select outgoing interface based on flow hash
     __u32 key = xxhash32(&flow_params, sizeof(flow_params), 0) % 2;
     bpf_printk("redirect: flow based key: %d\n", key);
     if (key != 0) { 
