@@ -34,7 +34,7 @@ int egress_redirect(struct __sk_buff *ctx) {
     eth = data;
     ipv4 = data + sizeof(struct ethhdr);
 
-    bpf_printk("redirect: checking ethernet header for IPv4 proto. result: %x\n", bpf_ntohs(eth->h_proto));
+    bpf_printk("redirect: checking ethernet header for IPv4 proto (800). result: %x\n", bpf_ntohs(eth->h_proto));
     if (bpf_ntohs(eth->h_proto) != ETH_P_IP) goto END;
 
     bpf_printk("redirect: checking destination address is 10.0.2.11 of 10.0.2.40\n");
@@ -58,7 +58,7 @@ int egress_redirect(struct __sk_buff *ctx) {
         bpf_printk("redirect: NOT performing redirect\n");
     }
 
-    bpf_printk("redirect: result: %d\n", ret);
+    bpf_printk("redirect: return code: %d\n", ret);
 END:
     bpf_printk("---------------<END>---------------\n\n\n");
     return ret;
