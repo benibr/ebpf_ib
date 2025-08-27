@@ -27,7 +27,7 @@ int egress_redirect(struct __sk_buff *ctx) {
     // bounds check for verifier, packet's data must be at least as large
     // as an ethernet header and the non-variable portion of the IPv4 header.
     if ((data + sizeof(struct ethhdr) + sizeof(struct iphdr) > data_end))
-        return TC_ACT_OK;
+        goto END;
 
     eth = data;
     ipv4 = data + sizeof(struct ethhdr);
@@ -46,7 +46,18 @@ int egress_redirect(struct __sk_buff *ctx) {
     //eth->h_dest[4] = 0x00;
     //eth->h_dest[5] = 0x00;
 
-    __u32 key = xxhash32((const char*)ipv4, sizeof(struct iphdr), 0) % 2;
+    __u32 src_ip = ipv4->saddr;
+    __u32 dst_ip = ipv4->daddr;
+    
+    struct {
+        __u32 src_ip;
+        __u32 dst_ip;
+    } flow_key = {src_ip, dst_ip};
+
+    __u32 hash = xxhash32(&flow_key, sizeof(flow_key), 0);
+    __u32 key = hash % 2;
+    bpf_printk("redirect: hash: %d\n", hash);
+    bpf_printk("redirect: key: %d\n", key);
     if (key != 0) { 
         bpf_printk("redirect: performing redirect\n");
         ret = bpf_redirect(TARGET_INTF, 0);
@@ -55,6 +66,8 @@ int egress_redirect(struct __sk_buff *ctx) {
     }
 
     bpf_printk("redirect: result: %d\n", ret);
+END:
+    bpf_printk("---------------<END>---------------\n\n\n");
     return ret;
 }
 
