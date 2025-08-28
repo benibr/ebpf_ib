@@ -8,4 +8,4 @@ Eg. with the IPoIB driver.
 
 ## Credits
 
-This repo was originally derived from github.com/benibr/ebpf-net. Thanks for the input!
+This repo was originally derived from [github.com/ldelossa/ebpf-net](https://github.com/ldelossa/ebpf-net). Thanks for the input!
